@@ -12,20 +12,29 @@
 
 var INSTANCE = $(location).attr('host');
 
-function card_formater(url, title, type, description, content, width, height) {
+function card_formater(url, title, type, description, image, width, height) {
   if (description.length > 50) {
     description = description.substr(0, 50);
   }
+  if (image == null || image == ''){
+    image = "https://"+INSTANCE+"/avatars/original/missing.png";
+  }
+
   if (type == "photo") {
-    return '<a href="' + url + '" class="status-card horizontal" target="_blank" rel="noopener"><div class="status-card__image"><img src="' + content + '" alt="' + title + '" class="status-card__image-image" width="' + width + '" height="' + height + '"></div><div class="status-card__content"><strong class="status-card__title" title="' + title + '">' + title + '</strong><span class="status-card__host">' + url.match(/^https?:\/\/(.*?)\//)[1] + '</span></div></a>';
+    return '<a href="' + url + '" class="status-card horizontal" target="_blank" rel="noopener"><div class="status-card__image"><img src="' + image + '" alt="' + title + '" class="status-card__image-image" width="' + width + '" height="' + height + '"></div><div class="status-card__content"><strong class="status-card__title" title="' + title + '">' + title + '</strong><span class="status-card__host">' + url.match(/^https?:\/\/(.*?)\//)[1] + '</span></div></a>';
   } else if (type == "link") {
     if (width > height) {
-      return '<a href="' + url + '" class="status-card horizontal" target="_blank" rel="noopener"><div class="status-card__image"><img src="' + content + '" alt="' + title + '" class="status-card__image-image" width="' + width + '" height="' + height + '"></div><div class="status-card__content"><strong class="status-card__title" title="' + title + '">' + title + '</strong><span class="status-card__host">' + url.match(/^https?:\/\/(.*?)\//)[1] + '</span></div></a>';
+      return '<a href="' + url + '" class="status-card horizontal" target="_blank" rel="noopener"><div class="status-card__image"><img src="' + image + '" alt="' + title + '" class="status-card__image-image" width="' + width + '" height="' + height + '"></div><div class="status-card__content"><strong class="status-card__title" title="' + title + '">' + title + '</strong><span class="status-card__host">' + url.match(/^https?:\/\/(.*?)\//)[1] + '</span></div></a>';
     } else {
-      return '<a href="' + url + '" class="status-card" target="_blank" rel="noopener"><div class="status-card__image"><img src="' + content + '" alt="' + title + '" class="status-card__image-image" width="' + width + '" height="' + height + '"></div><div class="status-card__content"><strong class="status-card__title" title="' + title + '">' + title + '</strong><p class="status-card__description">' + description + '</p><span class="status-card__host">' + url.match(/^https?:\/\/(.*?)\//)[1] + '</span></div></a>';
+      return '<a href="' + url + '" class="status-card" target="_blank" rel="noopener"><div class="status-card__image"><img src="' + image + '" alt="' + title + '" class="status-card__image-image" width="' + width + '" height="' + height + '"></div><div class="status-card__content"><strong class="status-card__title" title="' + title + '">' + title + '</strong><p class="status-card__description">' + description + '</p><span class="status-card__host">' + url.match(/^https?:\/\/(.*?)\//)[1] + '</span></div></a>';
     }
   } else if (type == "video") {
-    return '<div class="status-card-video">' + content + '</div>';
+      return '<div class="status-card horizontal" target="_blank" rel="noopener">'+
+        '<div class="status-card__image"><img src="' + image + '" alt="' + title + '" class="status-card__image-image" width="' + width + '" height="' + height + '">'+
+          '<div class="status-card__actions"><div><button class="play"><i class="fa fa-play"></i></button><a href="'+url+'" target="_blank" rel="noopener"><i class="fa fa-external-link"></i></a></div></div>'+
+        '</div>'+
+        '<div class="status-card__content"><a href="' + url + '" class="status-card__title" title="' + title + '"><strong>' + title + '</strong></a><span class="status-card__host">' + url.match(/^https?:\/\/(.*?)\//)[1] + '</span></div>'+
+        '</div>';
   }
   return '';
 }
@@ -38,7 +47,16 @@ function card_formater(url, title, type, description, content, width, height) {
       var id = $(this);
       $.getJSON("https://" + INSTANCE + "/api/v1/statuses/" + id.attr('data-id') + "/card").done(function(data) {
         if (data.html != null && data.html != "") {
-          $(id).find('.status__content').after(card_formater(data.url, data.title, data.type, data.description, data.html, data.width, data.height));
+          $(id).find('.status__content').after(card_formater(data.url, data.title, data.type, data.description, data.image, "100%", id.width()/data.width*data.height));
+          $(id).find('.play').on('click',function(){
+            var id = $(this).closest('.status');
+            $.getJSON("https://" + INSTANCE + "/api/v1/statuses/" + id.attr('data-id') + "/card").done(function(data) {
+              var card = $(id).find('.status-card__image');
+              $(card).html(data.html);
+              $(card).css('height', id.width()/data.width*data.height);
+              $(card).addClass('status-card-video');
+            });
+          });
         } else if (data.image != null && data.image != "") {
           $(id).find('.status__content').after(card_formater(data.url, data.title, data.type, data.description, data.image, data.width, data.height));
         } // else {$(id).find('.status__content').after("None");}
@@ -50,7 +68,16 @@ function card_formater(url, title, type, description, content, width, height) {
         var id = $(this);
         $.getJSON("https://" + INSTANCE + "/api/v1/statuses/" + id.attr('data-id') + "/card").done(function(data) {
           if (data.html != null && data.html != "") {
-            $(id).find('.status__content').after(card_formater(data.url, data.title, data.type, data.description, data.html, data.width, data.height));
+            $(id).find('.status__content').after(card_formater(data.url, data.title, data.type, data.description, data.image, "100%", id.width()/data.width*data.height));
+            $(id).find('.play').on('click',function(){
+              var id = $(this).closest('.status');
+              $.getJSON("https://" + INSTANCE + "/api/v1/statuses/" + id.attr('data-id') + "/card").done(function(data) {
+                var card = $(id).find('.status-card__image');
+                $(card).html(data.html);
+                $(card).css('height', id.width()/data.width*data.height);
+                $(card).addClass('status-card-video');
+              });
+            });
           } else if (data.image != null && data.image != "") {
             $(id).find('.status__content').after(card_formater(data.url, data.title, data.type, data.description, data.image, data.width, data.height));
           } // else {$(id).find('.status__content').after("None");}
