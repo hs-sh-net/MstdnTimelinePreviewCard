@@ -4,7 +4,7 @@ mastodonでPreviewCardをTLでも展開して欲しいなぁと思って作っ�
 ## インストール
 Tampermonkeyとかを使ってください。
 
-[ここから](https://github.com/theoria24/MstdnTimelinePreviewCard/raw/master/MstdnTLCard.user.js)
+[ここから](https://github.com/hs-sh-net/MstdnTimelinePreviewCard/raw/master/MstdnTLCard.user.js)
 
 7行目の
 ```js
